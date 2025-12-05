@@ -1,7 +1,6 @@
 "use client";
 
 import mapboxgl from "mapbox-gl";
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
 import React, { useState, useEffect, useRef } from "react";
 import StudentNavBar from "./components/StudentNavBar";
@@ -263,32 +262,6 @@ export default function StudentPage() {
           return normalizedTag === normalizedFilter || normalizedTag.includes(normalizedFilter);
         })
       );
-    // After you compute filteredOrganizers, also compute filteredEvents
-  const filteredEvents = currentEvents.filter((event) => {
-  const matchesSearch =
-    searchQuery === "" ||
-    event.organizer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.available_food.toLowerCase().includes(searchQuery.toLowerCase());
-
-  const matchesDietary =
-    dietary.length === 0 ||
-    dietary.some((diet) =>
-      (event.dietary_tags || []).some((tag) => {
-        const normalizedFilter = diet.toLowerCase().replace(/\s+/g, "-");
-        const normalizedTag = tag.toLowerCase().replace(/\s+/g, "-");
-        return normalizedTag === normalizedFilter || normalizedTag.includes(normalizedFilter);
-      })
-    );
-
-  const matchesAvailability =
-    availability === "" || event.availability === availability;
-
-  const matchesLocation =
-    location === "" || event.location === location;
-
-  return matchesSearch && matchesDietary && matchesAvailability && matchesLocation;
-});
-
     // Map availability filter to event availability
     const event = currentEvents.find((e) => e.id === organizer.id);
     const matchesAvailability = 
@@ -324,7 +297,7 @@ export default function StudentPage() {
     });
   }
 
-// ✅ Add this block here
+// Filter events for the map component
 const filteredEvents = currentEvents.filter((event) => {
   const matchesSearch =
     searchQuery === "" ||
@@ -428,17 +401,20 @@ export function StudentMap({ events }: { events: Event[] }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   // initialize map once
   useEffect(() => {
-    if (map.current) return;
+    if (map.current || !mapboxToken) return;
+    
+    mapboxgl.accessToken = mapboxToken;
     map.current = new mapboxgl.Map({
       container: mapContainer.current!,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [-71.1054, 42.3505], // BU campus default
       zoom: 14,
     });
-  }, []);
+  }, [mapboxToken]);
 
   // add markers when events change
   useEffect(() => {
@@ -475,6 +451,18 @@ export function StudentMap({ events }: { events: Event[] }) {
       map.current.fitBounds(bounds, { padding: 50 });
     }
   }, [events]);
+
+  // If no Mapbox token, show a placeholder
+  if (!mapboxToken) {
+    return (
+      <div style={{ height: "500px", width: "100%" }} className="flex items-center justify-center rounded-lg border-2 border-emerald-900/20 bg-emerald-50">
+        <p className="text-center text-emerald-900">
+          Map view requires a Mapbox access token.<br />
+          <span className="text-sm text-emerald-700">Add NEXT_PUBLIC_MAPBOX_TOKEN to your .env.local file</span>
+        </p>
+      </div>
+    );
+  }
 
   return <div ref={mapContainer} style={{ height: "500px", width: "100%" }} />;
 }

@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mapbox/mapbox-sdk": "^0.16.2",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.81.0",
+    "mapbox-gl": "^3.17.0",
     "next": "16.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"

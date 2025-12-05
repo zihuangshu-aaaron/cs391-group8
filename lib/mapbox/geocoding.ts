@@ -1,9 +1,3 @@
-import mbxGeocoding from "@mapbox/mapbox-sdk/services/geocoding";
-
-const geocodingClient = mbxGeocoding({
-  accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN!,
-});
-
 const buLocations: Record<string, { lat: number; lng: number }> = {
     "george-sherman-union": { lat: 42.3503, lng: -71.1062 },
     "central-campus": { lat: 42.3505, lng: -71.1054 },
@@ -19,9 +13,15 @@ export async function geocodeLocation(location: string) {
     return buLocations[normalized];
   }
 
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  if (!mapboxToken) {
+    // If no token, return null (will rely on BU locations only)
+    return null;
+  }
+
   const query = `${location}, Boston University, Boston MA`;
   const response = await fetch(
-    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}`
   );
   const data = await response.json();
 
